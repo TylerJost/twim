@@ -26,3 +26,5 @@ __pycache__/
 !data/experimentParams.txt
 .models.txt.swp
 
+# # other stuff I don't really care to have uploaded to github
+# notebooks/tutorials/*
