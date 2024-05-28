@@ -23,7 +23,10 @@ labelIdx = result['label']
 # %%
 def findWhite(txt):
     txt = np.array(list(txt))
-    return np.char.isspace(txt)
+    isWhite = np.char.isspace(txt)
+    isNotLine = txt != '\n'
+
+    return isWhite & isNotLine 
 
 # First, label everything as O
 labelsChar = np.array(list('O'*len(text)))
@@ -46,22 +49,71 @@ for labelId in labelIdx:
 newText = np.array(list(newText))
 newText[isWhite] = ' '
 newText = ''.join(newText)
-newText = newText.split()
+newText = newText.split('\n')
 # %%
 encodings = []
 last = ''
-for word in newText:
-    word = re.sub('[^A-Za-z0-9]+', '', word)
-    if word.isnumeric():
-        word = int(word[0])
-        if word == last:
-            encodings.append('I-band')
+for sentence in newText:
+    sentenceEncodings = []
+    for word in sentence.split(' '):
+        word = re.sub('[^A-Za-z0-9]+', '', word)
+        if word.isnumeric():
+            word = int(word[0])
+            if word == last:
+                sentenceEncodings.append('I-band')
+            else:
+                sentenceEncodings.append('B-band')
+            last = word
         else:
-            encodings.append('B-band')
-        last = word
+            sentenceEncodings.append('O')
+            last = -1
+    encodings.append(sentenceEncodings)
+
+sentences = text.split('\n')
+# %% [data cleaning]
+finalSentences, finalLabels = [], []
+for encoding, sentence in zip(encodings, sentences):
+    if len(sentence) == 0:
+        continue
     else:
-        encodings.append('O')
-        last = -1
+        finalSentences.append(sentence)
+        finalLabels.append(encoding)
+# %%
+data = {'sentence': finalSentences, 'labels': finalLabels}
+dfArtists = pd.DataFrame(data)
+dfArtists.to_csv('../data/conllArtists.csv', index = False, quoting = 1)
+# %%
+from datasets import load_dataset
+
+# Load the dataset
+dataset = load_dataset('csv', data_files='../data/conllArtists.csv')
+
+# Access the dataset
+train_dataset = dataset['train']
+
+def process_labels(examples):
+    # Convert the label strings to lists
+    examples['labels'] = eval(examples['labels'])
+    # Split sentences for tokenization
+    examples['tokens'] = examples['sentence'].split()
+    return examples
+
+train_dataset = train_dataset.map(process_labels)
+# %%
+from datasets import ClassLabel, Sequence, Features, Value
+new_features = train_dataset.features.copy()
+ner_labels = ['O', 'B-band', 'I-band']
+features = Features({
+    # 'sentence': Sequence(feature=Value(dtype='string'), length=-1),
+    'tokens': Sequence(feature=Value(dtype='string'), length=-1),
+    'labels': Sequence(feature=ClassLabel(names=ner_labels), length=-1)
+})
+train_dataset = train_dataset.cast(features)
+# %%
+for sentence, label in zip(train_dataset['sentence'], train_dataset['labels']):
+    if sentence is None:
+        print(sentence)
+        print(label)
 # %%
 stack = np.dstack([text.split(), encodings])
 for val in stack[0][0:200]:
@@ -69,6 +121,7 @@ for val in stack[0][0:200]:
 # %%
 sentenceNum = 0
 lastNum = -1
+
 isNewLine = np.array(list(text)) == '\n'
 isWhiteOrLine = np.logical_or(isNewLine, isWhite)
 sentenceNums = []
