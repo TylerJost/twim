@@ -17,8 +17,8 @@ ner_feature
 label_names = ner_feature.feature.names
 label_names
 # %%
-words = raw_datasets["train"][0]["tokens"]
-labels = raw_datasets["train"][0]["ner_tags"]
+words = raw_datasets["train"][4]["tokens"]
+labels = raw_datasets["train"][4]["ner_tags"]
 line1 = ""
 line2 = ""
 for word, label in zip(words, labels):
@@ -269,3 +269,12 @@ for epoch in range(num_train_epochs):
         # repo.push_to_hub(
         #     commit_message=f"Training in progress epoch {epoch}", blocking=False
         # )
+# %%
+from transformers import pipeline
+
+# Replace this with your own checkpoint
+model_checkpoint = output_dir
+token_classifier = pipeline(
+    "token-classification", model=model_checkpoint, aggregation_strategy="simple"
+)
+token_classifier("Peter Blackburn.")

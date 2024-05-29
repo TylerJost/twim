@@ -90,25 +90,24 @@ dataset = load_dataset('csv', data_files='../data/conllArtists.csv')
 
 # Access the dataset
 train_dataset = dataset['train']
+nerDict = {'O': 0, 'B-band': 1, 'I-band': 2}
 
 def process_labels(examples):
     # Convert the label strings to lists
     examples['labels'] = eval(examples['labels'])
     # Split sentences for tokenization
     examples['tokens'] = examples['sentence'].split()
+    examples['ner_tags'] = [nerDict[val] for val in examples['labels']]
     return examples
 
 train_dataset = train_dataset.map(process_labels)
 # %%
 from datasets import ClassLabel, Sequence, Features, Value
 new_features = train_dataset.features.copy()
-ner_labels = ['O', 'B-band', 'I-band']
-features = Features({
-    # 'sentence': Sequence(feature=Value(dtype='string'), length=-1),
-    'tokens': Sequence(feature=Value(dtype='string'), length=-1),
-    'labels': Sequence(feature=ClassLabel(names=ner_labels), length=-1)
-})
-train_dataset = train_dataset.cast(features)
+ner_labels =['O', 'B-band', 'I-band']
+new_features['tokens'] = Sequence(feature=Value(dtype='string'), length=-1)
+new_features['labels'] = Sequence(feature=ClassLabel(names=ner_labels), length=-1)
+train_dataset = train_dataset.cast(new_features)
 # %%
 for sentence, label in zip(train_dataset['sentence'], train_dataset['labels']):
     if sentence is None:
