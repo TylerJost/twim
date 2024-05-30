@@ -1,36 +1,14 @@
 # %%
-from datasets import load_dataset
-dataset = load_dataset('csv', data_files='../data/conllArtists.csv')
-
-# Access the dataset
-ds = dataset['train']
-nerDict = {'O': 0, 'B-band': 1, 'I-band': 2}
-
-def process_labels(examples):
-    # Convert the label strings to lists
-    examples['labels'] = eval(examples['labels'])
-    # Split sentences for tokenization
-    examples['tokens'] = examples['sentence'].split()
-    examples['ner_tags'] = [nerDict[val] for val in examples['labels']]
-    return examples
-
-ds = ds.map(process_labels)
+from twia.dataProcessing import convertToConll, makeDatasetDict
 # %%
-from datasets import ClassLabel, Sequence, Features, Value, DatasetDict
-new_features = ds.features.copy()
-ner_labels =['O', 'B-band', 'I-band']
-new_features['tokens'] = Sequence(feature=Value(dtype='string'), length=-1)
-new_features['labels'] = Sequence(feature=ClassLabel(names=ner_labels), length=-1)
-new_features['ner_tags'] = Sequence(feature=ClassLabel(names=ner_labels), length=-1)
-
-ds = ds.cast(new_features)
-trainTest = ds.train_test_split(test_size=0.2)
-testValid = trainTest['test'].train_test_split(test_size = 0.5)
-raw_datasets = DatasetDict({
-    'train': trainTest['train'],
-    'test' : testValid['test'],
-    'validation': testValid['test']
-})
+# Always process the dataset
+dfArtists = convertToConll('../data/raw/artists.jsonl', '../data/processed/conllArtists.csv')
+raw_datasets = makeDatasetDict('../data/processed/conllArtists.csv')
+# %%
+labelSizes = []
+for label in dfArtists['labels']:
+    if len(label) == 1:
+        labelSizes.append(label)
 # %%
 ner_feature = raw_datasets["train"].features["ner_tags"]
 ner_feature
@@ -76,9 +54,7 @@ def align_labels_with_tokens(labels, word_ids):
 labels = raw_datasets["train"][0]["ner_tags"]
 word_ids = inputs.word_ids()
 aligned = align_labels_with_tokens(labels, word_ids)
-print(labels)
-print(aligned)
-print(inputs.tokens())
+
 # %%
 # We'll use this function to tokenize the dataset and map the aligned labels
 def tokenize_and_align_labels(examples):
@@ -198,7 +174,7 @@ model, optimizer, train_dataloader, eval_dataloader = accelerator.prepare(
 # %%
 from transformers import get_scheduler
 
-num_train_epochs = 3
+num_train_epochs = 10
 num_update_steps_per_epoch = len(train_dataloader)
 num_training_steps = num_train_epochs * num_update_steps_per_epoch
 

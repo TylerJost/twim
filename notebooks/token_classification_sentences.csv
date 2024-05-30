@@ -1,3 +1,0 @@
-sentence,labels
-Hello John Doe,"[""B-PER"", ""I-PER"", ""I-PER""]"
-How are you today ?,"[""O"", ""O"", ""O"", ""O"", ""O""]"
