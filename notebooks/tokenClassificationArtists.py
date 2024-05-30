@@ -114,7 +114,7 @@ import evaluate
 
 metric = evaluate.load("seqeval")
 # %%
-labels = raw_datasets["train"][0]["ner_tags"]
+labels = raw_datasets["train"][4]["ner_tags"]
 labels = [label_names[i] for i in labels]
 labels
 # %% This will compute references
@@ -278,3 +278,12 @@ for epoch in range(num_train_epochs):
         #     commit_message=f"Training in progress epoch {epoch}", blocking=False
         # )
 # %%
+
+from transformers import pipeline
+
+# Replace this with your own checkpoint
+model_checkpoint = output_dir
+token_classifier = pipeline(
+    "token-classification", model=model_checkpoint, aggregation_strategy="simple"
+)
+token_classifier("Chunky Dunk Presents Sacred Space with Big Dipper, Christeene, Meatball, Brigitte Bandit, DJ Orya & more (9PM)")

@@ -20,6 +20,13 @@ for json_str in json_list:
     # print(isinstance(result, dict))
 text = result['text']
 labelIdx = result['label']
+
+# Get rid of all the text that isn't annotated yet
+lastLabel = labelIdx[-1][1]
+isLine = np.where(np.array(list(text)) == '\n')[0]
+isLine = isLine[isLine >= lastLabel]
+nextLine = isLine[0]
+text = text[0:nextLine]
 # %%
 def findWhite(txt):
     txt = np.array(list(txt))
