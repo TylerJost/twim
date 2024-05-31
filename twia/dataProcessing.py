@@ -27,8 +27,15 @@ def convertToConll(fileLoad, fileSave):
         # print(f"result: {result}")
         # print(isinstance(result, dict))
     text = result['text']
-    labelIdx = result['label']
+    labelIdxInit = result['label']
 
+    labelIdx = []
+    for label in labelIdxInit:
+        sentenceLabel = text[label[0]:label[1]]
+        if '\n' in sentenceLabel:
+            continue
+        else:
+            labelIdx.append(label)
     # Get rid of all the text that isn't annotated yet
     lastLabel = labelIdx[-1][1]
     isLine = np.where(np.array(list(text)) == '\n')[0]

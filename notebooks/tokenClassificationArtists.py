@@ -2,6 +2,7 @@
 from twia.dataProcessing import convertToConll, makeDatasetDict
 # %%
 # Always process the dataset
+dfArtists = convertToConll('../data/raw/artists_old.jsonl', '../data/processed/conllArtists.csv')
 dfArtists = convertToConll('../data/raw/artists.jsonl', '../data/processed/conllArtists.csv')
 raw_datasets = makeDatasetDict('../data/processed/conllArtists.csv')
 # %%
@@ -256,6 +257,7 @@ for epoch in range(num_train_epochs):
 # %%
 
 from transformers import pipeline
+output_dir = "../../models/bert-finetuned-ner"
 
 # Replace this with your own checkpoint
 model_checkpoint = output_dir
@@ -263,3 +265,8 @@ token_classifier = pipeline(
     "token-classification", model=model_checkpoint, aggregation_strategy="simple"
 )
 token_classifier("Chunky Dunk Presents Sacred Space with Big Dipper, Christeene, Meatball, Brigitte Bandit, DJ Orya & more (9PM)")
+# %%
+sentence = 'BLUE TONGUE / THE FIZGIGS / ERICA LONGORIA'
+sentence = 'Curtis McMurtry, Zack Wiggs, Sydney Wright'
+sentence = 'EAST SIDE BEATS featuring DUB EQUIS, Kydd Jones, Ben Buck, Abstractamcr, The PHX '
+token_classifier(sentence)
