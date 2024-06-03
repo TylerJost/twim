@@ -30,3 +30,4 @@ __pycache__/
 # notebooks/tutorials/*
 .cache
 twia.egg-info
+config.cfg
