@@ -21,14 +21,13 @@ def authSpotify():
     CLIENT_ID = config['spotify']['client_id']
     CLIENT_SECRET = config['spotify']['client_secret']
     REDIRECT_URI = config['spotify']['redirect_uri']
-    REDIRECT_URI = 'http://localhost:8000/callback'
     scope = "user-library-read"
-    
+        
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth( client_id=CLIENT_ID,
                                                     client_secret=CLIENT_SECRET,
                                                     redirect_uri=REDIRECT_URI,
                                                     scope=scope,
-                                                    open_browser=False))
+                                                    open_browser=True))
     return sp
 
 def authSpotify2():
