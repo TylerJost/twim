@@ -13,7 +13,7 @@ from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 
 from transformers import pipeline
 
-def authSpotify():
+def authSpotify(scope = 'playlist-modify-public'):
     currentPath = pathlib.Path(__file__).resolve().parent
     config = configparser.ConfigParser()
     config.read(currentPath / '../data/config.cfg')
@@ -21,8 +21,7 @@ def authSpotify():
     CLIENT_ID = config['spotify']['client_id']
     CLIENT_SECRET = config['spotify']['client_secret']
     REDIRECT_URI = config['spotify']['redirect_uri']
-    scope = "user-library-read"
-        
+    
     sp = spotipy.Spotify(auth_manager=SpotifyOAuth( client_id=CLIENT_ID,
                                                     client_secret=CLIENT_SECRET,
                                                     redirect_uri=REDIRECT_URI,
@@ -30,7 +29,7 @@ def authSpotify():
                                                     open_browser=True))
     return sp
 
-def authSpotify2():
+def authSpotifyClientCredentials():
     currentPath = pathlib.Path(__file__).resolve().parent
     config = configparser.ConfigParser()
     config.read(currentPath / '../data/config.cfg')

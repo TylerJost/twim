@@ -7,7 +7,12 @@ import re
 from tqdm import tqdm
 from transformers import pipeline
 import time
+import random
+import functools
+import operator
+
 from twia.getSpotify import levenshtein
+import matplotlib.pyplot as plt
 # %%
 class artistInfo():
     """
@@ -60,30 +65,76 @@ class artistInfo():
 # %%
 from twia.getSpotify import scrapeAndClassifyArtists, levenshtein
 showlistUrl = 'https://austin.showlists.net'
-# artistsPred = scrapeAndClassifyArtists(url = showlistUrl, maxDays = 7)
+artistsPred = scrapeAndClassifyArtists(url = showlistUrl, maxDays = 7)
 # %%
-from twia.getSpotify import authSpotify
-sp = authSpotify()
-# %%
-artists = []
+# Get artist information
+# Here we use client credential authorizations for better rate limiting
+# We also don't need to build the playlist yet
+from twia.getSpotify import authSpotify, authSpotifyClientCredentials
+sp = authSpotifyClientCredentials()
+
+allArtists = {}
 i = 0
 for artist in tqdm(artistsPred):
-    artists.append(artistInfo(artist, sp))
+    predArtist = artistInfo(artist, sp)
+    nTop = len(predArtist.topTracks)
+    if predArtist.artistName != 'NaN' and nTop == 10:
+        allArtists[artist] = predArtist
     # time.sleep(2)
-    if i > 5:
-        break
-    i += 1
+    # if i > 5:
+    #     break
+    # i += 1
 # %%
-artistName = 'HAAM'
-spotifyArtistName = 'Haamin'
-levenshtein(artistName.lower(), spotifyArtistName.lower())
-# %%
-artistFake = artistInfo('fakeasdf;lkjasdfh3lk', sp)
-# %%
-swift = sp.search(q=f'artist:King of Heck', type='artist')
-swift = swift['artists']['items'][0]
-# %%
-pillar = sp.search(q=f'artist:Pillar', type='artist')
-pillar = pillar['artists']['items'][0]
+# A bit of analytics
+popularityDf = {'name': [], 'popularity': []}
 
+for artist in allArtists.values():
+    popularityDf['name'].append(artist.artistName)
+    popularityDf['popularity'].append(artist.artistInfo['popularity'])
+popularityDf = pd.DataFrame(popularityDf).sort_values(by='popularity', ascending = False)
+# %%
+
+trackUris = {}
+nTop = 15
+topArtists = popularityDf['name'][0:nTop].to_list()
+otherArtists = popularityDf['name'][nTop:].to_list()
+
+random.shuffle(otherArtists)
+
+c= 0
+for artistName in topArtists:
+    artist = allArtists[artistName]
+    trackUris[artistName] = []
+    for track in artist.topTracks[0:3]:
+        trackUris[artistName].append(track['uri'])
+        c += 1
+for artistName in otherArtists[0:100-nTop*3]:
+    artist = allArtists[artistName]
+    trackUris[artistName] = [artist.topTracks[0]['uri']]
+
+allUris = functools.reduce(operator.iconcat, trackUris.values(), [])
+random.shuffle(allUris)
+# %%
+sp = authSpotify()
+name = 'twia'
+description = "This week's music in Austin, TX"
+user_id = sp.me()['id']
+sp.user_playlist_create(user = user_id, 
+                        name=name,
+                        public = True,
+                        description=description)
+
+# %%
+playlistId = 'spotify:playlist:7oWlCMpyEMTjvu1GwIoDMN'
+sp.playlist_add_items(playlist_id=playlistId, items=allUris)
+# %%
+spotifyArtists = [artist for artist in allArtists if artist.spotifyArtist != 'NaN']
+# %%
+# A bit of analytics
+
+plt.hist(popularityDf['popularity'])
+# %%
+for artist in spotifyArtists:
+    if artist.artistName == 'Vantage':
+        break
 # %%
