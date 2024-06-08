@@ -1,18 +1,13 @@
 # %%
-from bs4 import BeautifulSoup
-import requests
-from datetime import datetime
 import pandas as pd
-import re
 from tqdm import tqdm
-from transformers import pipeline
-import time
 import random
 import functools
 import operator
+import pickle
+import matplotlib.pyplot as plt
 
 from twia.getSpotify import levenshtein
-import matplotlib.pyplot as plt
 # %%
 class artistInfo():
     """
@@ -93,7 +88,6 @@ for artist in allArtists.values():
     popularityDf['popularity'].append(artist.artistInfo['popularity'])
 popularityDf = pd.DataFrame(popularityDf).sort_values(by='popularity', ascending = False)
 # %%
-
 trackUris = {}
 nTop = 15
 topArtists = popularityDf['name'][0:nTop].to_list()
@@ -111,21 +105,28 @@ for artistName in topArtists:
 for artistName in otherArtists[0:100-nTop*3]:
     artist = allArtists[artistName]
     trackUris[artistName] = [artist.topTracks[0]['uri']]
-
 allUris = functools.reduce(operator.iconcat, trackUris.values(), [])
 random.shuffle(allUris)
 # %%
 sp = authSpotify()
-name = 'twia'
-description = "This week's music in Austin, TX"
-user_id = sp.me()['id']
-sp.user_playlist_create(user = user_id, 
-                        name=name,
-                        public = True,
-                        description=description)
+# name = 'twia'
+# description = "This week's music in Austin, TX"
+# user_id = sp.me()['id']
+# sp.user_playlist_create(user = user_id, 
+#                         name=name,
+#                         public = True,
+#                         description=description)
 
 # %%
 playlistId = 'spotify:playlist:7oWlCMpyEMTjvu1GwIoDMN'
+# %%
+response = sp.playlist_items(playlistId,
+                                offset=0,
+                                fields='items.track.id,total',
+                                additional_types=['track'])
+# %%
+sp.playlist_replace_items(playlistId, allUris)
+# %%
 sp.playlist_add_items(playlist_id=playlistId, items=allUris)
 # %%
 spotifyArtists = [artist for artist in allArtists if artist.spotifyArtist != 'NaN']
