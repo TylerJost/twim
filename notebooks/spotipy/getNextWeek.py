@@ -8,6 +8,9 @@ import pickle
 import matplotlib.pyplot as plt
 
 from twia.getSpotify import levenshtein
+from twia.getSpotify import scrapeAndClassifyArtists, levenshtein
+from twia.getSpotify import authSpotify, authSpotifyClientCredentials
+
 # %%
 class artistInfo():
     """
@@ -58,16 +61,14 @@ class artistInfo():
     def __str__(self):
         return f'Artist: {self.artistName}\nSpotify Artist Name: {self.spotifyArtist}'
 # %%
-from twia.getSpotify import scrapeAndClassifyArtists, levenshtein
 showlistUrl = 'https://austin.showlists.net'
 artistsPred = scrapeAndClassifyArtists(url = showlistUrl, maxDays = 7)
 # %%
 # Get artist information
 # Here we use client credential authorizations for better rate limiting
 # We also don't need to build the playlist yet
-from twia.getSpotify import authSpotify, authSpotifyClientCredentials
 sp = authSpotifyClientCredentials()
-
+# %%
 allArtists = {}
 i = 0
 for artist in tqdm(artistsPred):
@@ -127,15 +128,36 @@ response = sp.playlist_items(playlistId,
 # %%
 sp.playlist_replace_items(playlistId, allUris)
 # %%
-sp.playlist_add_items(playlist_id=playlistId, items=allUris)
+# sp.playlist_add_items(playlist_id=playlistId, items=allUris)
 # %%
 spotifyArtists = [artist for artist in allArtists if artist.spotifyArtist != 'NaN']
 # %%
-# A bit of analytics
+import configparser
+import spotipy
+from pathlib import Path
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
+import spotipy
+config = configparser.ConfigParser()
 
-plt.hist(popularityDf['popularity'])
-# %%
-for artist in spotifyArtists:
-    if artist.artistName == 'Vantage':
-        break
-# %%
+config.read('../../data/config.cfg')
+
+CLIENT_ID = config['spotify']['client_id']
+CLIENT_SECRET = config['spotify']['client_secret']
+REDIRECT_URI = config['spotify']['redirect_uri']
+
+cachePath = './.cache'
+assert Path(cachePath).exists(), f'{cachePath} does not exist!'
+cacheHandler = spotipy.cache_handler.CacheFileHandler()
+
+scope = 'playlist-modify-public'
+spOauth = SpotifyOAuth( 
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
+            redirect_uri=REDIRECT_URI,
+            scope=scope,
+            open_browser=True,
+            cache_path=cachePath,
+            cache_handler=cacheHandler
+            )
+token_info = spOauth.get_cached_token()
+sp = spotipy.Spotify(auth=token_info['access_token'])

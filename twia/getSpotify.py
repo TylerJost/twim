@@ -2,6 +2,7 @@ import configparser
 import pathlib
 from datetime import datetime
 import re
+from pathlib import Path
 
 import pandas as pd
 from tqdm import tqdm
@@ -9,10 +10,9 @@ from bs4 import BeautifulSoup
 import requests
 
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials, CacheFileHandler
 
 from transformers import pipeline
-
 def authSpotify(scope = 'playlist-modify-public'):
     currentPath = pathlib.Path(__file__).resolve().parent
     config = configparser.ConfigParser()
@@ -22,12 +22,20 @@ def authSpotify(scope = 'playlist-modify-public'):
     CLIENT_SECRET = config['spotify']['client_secret']
     REDIRECT_URI = config['spotify']['redirect_uri']
     
-    sp = spotipy.Spotify(auth_manager=SpotifyOAuth( client_id=CLIENT_ID,
-                                                    client_secret=CLIENT_SECRET,
-                                                    redirect_uri=REDIRECT_URI,
-                                                    scope=scope,
-                                                    open_browser=True))
+    cachePath = currentPath / '../notebooks/spotipy/.cache'
+    assert Path(cachePath).exists(), f'{cachePath} does not exist!'
+    spOauth = SpotifyOAuth( 
+                client_id=CLIENT_ID,
+                client_secret=CLIENT_SECRET,
+                redirect_uri=REDIRECT_URI,
+                scope=scope,
+                open_browser=True,
+                cache_handler=CacheFileHandler(cachePath)
+                )
+    token_info = spOauth.get_cached_token()
+    sp = spotipy.Spotify(auth=token_info['access_token'])
     return sp
+
 
 def authSpotifyClientCredentials():
     currentPath = pathlib.Path(__file__).resolve().parent
