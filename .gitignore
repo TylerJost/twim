@@ -31,3 +31,4 @@ __pycache__/
 .cache
 twia.egg-info
 config.cfg
+.spotipyoauthcache

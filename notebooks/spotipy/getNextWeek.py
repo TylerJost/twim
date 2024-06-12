@@ -109,7 +109,7 @@ for artistName in otherArtists[0:100-nTop*3]:
 allUris = functools.reduce(operator.iconcat, trackUris.values(), [])
 random.shuffle(allUris)
 # %%
-sp = authSpotify()
+# sp = authSpotify()
 # name = 'twia'
 # description = "This week's music in Austin, TX"
 # user_id = sp.me()['id']
@@ -134,9 +134,8 @@ spotifyArtists = [artist for artist in allArtists if artist.spotifyArtist != 'Na
 # %%
 import configparser
 import spotipy
-from pathlib import Path
-from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
-import spotipy
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials, CacheFileHandler
+
 config = configparser.ConfigParser()
 
 config.read('../../data/config.cfg')
@@ -145,19 +144,60 @@ CLIENT_ID = config['spotify']['client_id']
 CLIENT_SECRET = config['spotify']['client_secret']
 REDIRECT_URI = config['spotify']['redirect_uri']
 
-cachePath = './.cache'
-assert Path(cachePath).exists(), f'{cachePath} does not exist!'
-cacheHandler = spotipy.cache_handler.CacheFileHandler()
-
+username = 'tjost'
 scope = 'playlist-modify-public'
+
+
+CLIENT_ID = config['spotify']['client_id']
+CLIENT_SECRET = config['spotify']['client_secret']
+REDIRECT_URI = config['spotify']['redirect_uri']
+
+cachePath = './.cache'
 spOauth = SpotifyOAuth( 
             client_id=CLIENT_ID,
             client_secret=CLIENT_SECRET,
             redirect_uri=REDIRECT_URI,
             scope=scope,
-            open_browser=True,
-            cache_path=cachePath,
-            cache_handler=cacheHandler
+            open_browser=False,
+            cache_handler=CacheFileHandler(cachePath)
             )
-token_info = spOauth.get_cached_token()
+token_info = spOauth.get_access_token()
 sp = spotipy.Spotify(auth=token_info['access_token'])
+# %%
+cachePath = '.spotipyoauthcache'
+sp_oauth  = SpotifyOAuth( 
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
+            redirect_uri=REDIRECT_URI,
+            scope=scope,
+            open_browser=False,
+            cache_handler=CacheFileHandler(cachePath)
+            )
+token_info = sp_oauth.get_cached_token()
+
+# %%
+if not token_info:
+    # If there is no cached token, prompt for authentication
+    auth_url = sp_oauth.get_authorize_url()
+    print(f'Please go to this URL to authorize: {auth_url}')
+    response = input('Enter the URL you were redirected to: ')
+    code = sp_oauth.parse_response_code(response)
+    token_info = sp_oauth.get_access_token(code)
+    if not token_info:
+        raise Exception("Could not get token info")
+    
+# %%
+if sp_oauth.is_token_expired(token_info):
+    token_info = sp_oauth.refresh_access_token(token_info['refresh_token'])
+
+# Save the token to the cache
+sp_oauth.cache_handler.save_token_to_cache(token_info)
+
+# Create a Spotipy client with the token
+sp = spotipy.Spotify(auth=token_info['access_token'])
+
+# Your Spotipy code here, for example:
+results = sp.current_user_saved_tracks()
+for idx, item in enumerate(results['items']):
+    track = item['track']
+    print(f'{idx + 1}. {track["name"]} by {track["artists"][0]["name"]}')
