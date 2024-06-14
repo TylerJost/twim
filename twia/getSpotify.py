@@ -22,18 +22,35 @@ def authSpotify(scope = 'playlist-modify-public'):
     CLIENT_SECRET = config['spotify']['client_secret']
     REDIRECT_URI = config['spotify']['redirect_uri']
     
-    cachePath = currentPath / '../notebooks/spotipy/.cache'
+    cachePath = currentPath / '../notebooks/spotipy/.spotipyoauthcache'
+    print(cachePath)
     assert Path(cachePath).exists(), f'{cachePath} does not exist!'
     spOauth = SpotifyOAuth( 
                 client_id=CLIENT_ID,
                 client_secret=CLIENT_SECRET,
                 redirect_uri=REDIRECT_URI,
                 scope=scope,
-                open_browser=True,
+                open_browser=False,
                 cache_handler=CacheFileHandler(cachePath)
                 )
     token_info = spOauth.get_cached_token()
+    if not token_info:
+        # If there is no cached token, prompt for authentication
+        auth_url = spOauth.get_authorize_url()
+        print(f'Please go to this URL to authorize: {auth_url}')
+        response = input('Enter the URL you were redirected to: ')
+        code = spOauth.parse_response_code(response)
+        token_info = spOauth.get_access_token(code)
+        if not token_info:
+            raise Exception("Could not get token info")
+    if spOauth.is_token_expired(token_info):
+        token_info = spOauth.refresh_access_token(token_info['refresh_token'])
+    # Save the token to the cache
+    spOauth.cache_handler.save_token_to_cache(token_info)
+
+    # Create a Spotipy client with the token
     sp = spotipy.Spotify(auth=token_info['access_token'])
+    
     return sp
 
 
