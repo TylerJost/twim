@@ -119,3 +119,4 @@ response = sp.playlist_items(playlistId,
                                 additional_types=['track'])
 # %%
 sp.playlist_replace_items(playlistId, allUris)
+# %%

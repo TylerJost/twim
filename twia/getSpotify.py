@@ -13,6 +13,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials, CacheFileHandler
 
 from transformers import pipeline
+import torch
+
 def authSpotify(scope = 'playlist-modify-public'):
     currentPath = pathlib.Path(__file__).resolve().parent
     config = configparser.ConfigParser()
@@ -100,8 +102,12 @@ def scrapeAndClassifyArtists(url = 'https://austin.showlists.net', maxDays = 7):
 
     modelDir = currentPath / '../' / 'models/bert-finetuned-ner'
 
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     token_classifier = pipeline(
-        "token-classification", model=modelDir, aggregation_strategy="simple"
+        "token-classification", 
+        model=modelDir, 
+        aggregation_strategy="simple",
+        device = device
     )
 
     # Find artists in the appropriate range (maxDays)
