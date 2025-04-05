@@ -65,8 +65,20 @@ token_classifier = pipeline(
     device = device
 )
 # %%
+from tqdm import tqdm
+
+c = 0
 predArtists = {}
 for event in tqdm(allEvents):
     if event in recurEvents:
         continue
-    predArtists[event] = token_classifier(event)
+    potentialArtists = token_classifier(event)
+    for potentialArtist in potentialArtists:
+        if potentialArtist['score'] > 0.98:
+            predArtists[event] = potentialArtist['word']
+    c += 1
+    if c > 100:
+        break
+
+for artist, pred in predArtists.items():
+    print(f'{artist}: {pred}')
