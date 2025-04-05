@@ -4,6 +4,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 import numpy as np
+import re
 
 from collections import defaultdict
 # %%
@@ -46,15 +47,8 @@ for event, ct in zip(uniqueEvents, cts):
         recurEvents.append(str(event))
         eventDict[event] = ct
 # %%
-
-# %%
-from twia.getSpotify import getShowlistArtists
-url = 'https://austin.showlists.net'
-dateBands, dates = getShowlistArtists(url)
-
-# %%
 import torch
-modelDir = '../../models/bert-finetuned-ner'
+modelDir = '../models/bert-finetuned-ner'
 from transformers import pipeline
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -81,4 +75,25 @@ for event in tqdm(allEvents):
         break
 
 for artist, pred in predArtists.items():
-    print(f'{artist}: {pred}')
+    print(f'{artist}\n\t{pred}\n')
+# %%
+webBandLocs = soup.select('#events a , .event-details div:nth-child(2)')
+c = 0
+bandLocs = {}
+for bandLoc in webBandLocs:
+    bandLoc = bandLoc.text.replace('\n','')
+    bandLoc = re.sub(r'\s+', ' ', bandLoc).strip()
+
+    print(bandLoc)
+    # if c == 0:
+    #     bandLocs[bandLoc] = ''
+    #     lastBand = bandLoc
+    #     c = 1
+    
+    # if c == 1:
+    #     if bandLoc.startswith('at') and bandLoc.endswith(')'):
+    #         bandLoc = bandLoc[3:].split(' (')[0]
+    #         bandLocs[lastBand] = bandLoc
+    #     else:
+    #         bandLocs[lastBand] = ''
+    #     c = 0
