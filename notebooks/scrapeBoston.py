@@ -25,16 +25,48 @@ for entry in dateBands:
     if entryDay in days:
         date = datetime.strptime(entry, "%a, %B %d")
         delta = np.abs(date - firstDate)
-        if delta.days > 7:
-            break
+        # if delta.days > 7:
+        #     break
     else:
         if date in artistDates.keys():
             artistDates[date].append(entry)
         else:
             artistDates[date] = []
+# %%
+# Find recurring events
+allEvents = []
+for date, artist in artistDates.items():
+    allEvents+= artist
+uniqueEvents, cts = np.unique(allEvents, return_counts=True)
+recurEvents = []
+eventDict = {}
+for event, ct in zip(uniqueEvents, cts):
+    event = str(event)
+    if ct >= 4:
+        recurEvents.append(str(event))
+        eventDict[event] = ct
+# %%
 
-    
 # %%
 from twia.getSpotify import getShowlistArtists
 url = 'https://austin.showlists.net'
 dateBands, dates = getShowlistArtists(url)
+
+# %%
+import torch
+modelDir = '../../models/bert-finetuned-ner'
+from transformers import pipeline
+
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+token_classifier = pipeline(
+    "token-classification", 
+    model=modelDir, 
+    aggregation_strategy="simple",
+    device = device
+)
+# %%
+predArtists = {}
+for event in tqdm(allEvents):
+    if event in recurEvents:
+        continue
+    predArtists[event] = token_classifier(event)
