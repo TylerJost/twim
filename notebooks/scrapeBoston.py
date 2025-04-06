@@ -77,23 +77,39 @@ for event in tqdm(allEvents):
 for artist, pred in predArtists.items():
     print(f'{artist}\n\t{pred}\n')
 # %%
-webBandLocs = soup.select('#events a , .event-details div:nth-child(2)')
-c = 0
+from pprint import pprint
+# webBandLocs = soup.select('#events a , .event-details div:nth-child(2)')
+webBandLocs = soup.select('.event-details div:nth-child(2) , #events div:nth-child(1)')
+isBand = 1
+isLocation = 0
+wasBand = 0
 bandLocs = {}
+lastEntry = ''
+def isLocation(entry):
+    return entry.startswith('at') and entry.endswith(')')
+def isBand(entry):
+    return not isLocation(entry)
+
 for bandLoc in webBandLocs:
     bandLoc = bandLoc.text.replace('\n','')
     bandLoc = re.sub(r'\s+', ' ', bandLoc).strip()
 
-    print(bandLoc)
-    # if c == 0:
-    #     bandLocs[bandLoc] = ''
-    #     lastBand = bandLoc
-    #     c = 1
-    
-    # if c == 1:
-    #     if bandLoc.startswith('at') and bandLoc.endswith(')'):
-    #         bandLoc = bandLoc[3:].split(' (')[0]
-    #         bandLocs[lastBand] = bandLoc
-    #     else:
-    #         bandLocs[lastBand] = ''
-    #     c = 0
+    if isBand(bandLoc):
+        bandLocs[bandLoc] = ''
+    if isBand(bandLoc) and isLocation(lastEntry):
+        bandLocs[bandLoc] = lastEntry[3:].split(' (')[0]
+
+
+    lastEntry = bandLoc
+# %%
+allVenues = list(bandLocs.values())
+potentialBan = []
+for venue in allVenues:
+    if 'church' in venue.lower():
+        potentialBan.append(venue)
+
+potentialBan = list(set(potentialBan))
+
+venueCt = pd.DataFrame(allVenues).value_counts()
+# %%
+# All of this needs to be concatenated and shortened
