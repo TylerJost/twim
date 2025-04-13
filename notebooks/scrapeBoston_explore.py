@@ -5,8 +5,6 @@ import pandas as pd
 from datetime import datetime
 import numpy as np
 import re
-
-from collections import defaultdict
 # %%
 url = 'https://bostonshows.org/'
 res = requests.get(url)
@@ -15,7 +13,7 @@ soup = BeautifulSoup(res.text)
 dateBands = soup.select('#events div:nth-child(1) , .sticky')
 dateBands = [line.text.replace('\n', '') for line in dateBands]
 # %%
-days = ('Mon', 'Tue', 'Wed', 'Thu' 'Fri', 'Sat', 'Sun')
+days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
 artistDates = {}
 
 firstDate = datetime.strptime(dateBands[0], "%a, %B %d")
@@ -80,8 +78,6 @@ for artist, pred in predArtists.items():
 from pprint import pprint
 # webBandLocs = soup.select('#events a , .event-details div:nth-child(2)')
 webBandLocs = soup.select('.event-details div:nth-child(2) , #events div:nth-child(1)')
-isBand = 1
-isLocation = 0
 wasBand = 0
 bandLocs = {}
 lastEntry = ''
@@ -94,22 +90,95 @@ for bandLoc in webBandLocs:
     bandLoc = bandLoc.text.replace('\n','')
     bandLoc = re.sub(r'\s+', ' ', bandLoc).strip()
 
+    # If it's a band, store with empty string
     if isBand(bandLoc):
         bandLocs[bandLoc] = ''
-    if isBand(bandLoc) and isLocation(lastEntry):
-        bandLocs[bandLoc] = lastEntry[3:].split(' (')[0]
+    # If it's a location and the last one was a band
+    if isLocation(bandLoc) and isBand(lastEntry):
+        bandLocs[lastEntry] = bandLoc[3:].split(' (')[0]
 
 
     lastEntry = bandLoc
 # %%
+# Make e
 allVenues = list(bandLocs.values())
 potentialBan = []
+
+def bannedVenue(venue):
+    return any(word in venue.lower() for word in ['church', 'symphon', 'parish', 'berklee', 'conservatory', 'school of music'])
 for venue in allVenues:
-    if 'church' in venue.lower():
+    if bannedVenue(venue):
         potentialBan.append(venue)
 
 potentialBan = list(set(potentialBan))
 
 venueCt = pd.DataFrame(allVenues).value_counts()
+
+bands = []
+for bandLoc in webBandLocs:
+    bandLoc = bandLoc.text.replace('\n','')
+    bandLoc = re.sub(r'\s+', ' ', bandLoc).strip()
+    if isBand(bandLoc):
+        bands.append(bandLoc)
+
+        if 'symphon' in bandLoc.lower():
+            potentialBan.append(bandLoc)
+eventCt = pd.DataFrame(bands).value_counts()
+highEvent = eventCt[eventCt >2]
+highEvent = [event[0] for event in highEvent.index.to_list()]
+potentialBan += highEvent
 # %%
-# All of this needs to be concatenated and shortened
+# Try to get the dates in there too
+webCommand = '.date-header , .event-details div:nth-child(2) , #events div:nth-child(1)'
+webFo = soup.select(webCommand)
+entries = [entry.text.replace('\n', '') for entry in webFo]
+firstDate = datetime.strptime(entries[0], "%a, %B %d")
+firstDate = firstDate.replace(day=datetime.now().day)
+
+def isLocation(entry):
+    return entry.startswith('at') and entry.endswith(')')
+def isBand(entry):
+    return not isLocation(entry)
+def isDate(entry):
+    days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+    return entry.split(',')[0] in days
+predArtists = []
+isPast = 0
+for entry in tqdm(entries):
+    # Check date
+    if isDate(entry):
+        date = datetime.strptime(entry, "%a, %B %d")
+        delta = date - firstDate
+
+        # If it's before the current date, continually skip
+        if delta.days < 0:
+            isPast = 1
+        else:
+            isPast = 0
+
+        # Stop after a week
+        if delta.days > 7:
+            break
+        continue
+
+    # Don't do anything if the concert was in the past
+    if isPast:
+        continue
+
+    if entry in potentialBan:
+        continue
+    
+
+    if isBand(entry):
+        potentialArtists = token_classifier(entry)
+        for potentialArtist in potentialArtists:
+            if potentialArtist['score'] > 0.98:
+                predArtists.append(potentialArtist['word'])
+
+# Remove commas in artist at end of string
+artists = []
+for artist in predArtists:
+    if artist.endswith(','):
+        artist = artist[0:-1]
+    artist = artist.replace(' ’ ', "'")
+    artists.append(artist)

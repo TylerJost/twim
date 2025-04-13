@@ -8,7 +8,7 @@ import pickle
 import matplotlib.pyplot as plt
 
 from twia.getSpotify import levenshtein
-from twia.getSpotify import scrapeAndClassifyArtists, levenshtein
+from twia.getSpotify import scrapeAndClassifyAustin, levenshtein
 from twia.getSpotify import authSpotify, authSpotifyClientCredentials
 
 # %%
@@ -62,7 +62,7 @@ class artistInfo():
         return f'Artist: {self.artistName}\nSpotify Artist Name: {self.spotifyArtist}'
 # %%
 showlistUrl = 'https://austin.showlists.net'
-artistsPred = scrapeAndClassifyArtists(url = showlistUrl, maxDays = 7)
+artistsPred = scrapeAndClassifyAustin(url = showlistUrl, maxDays = 7)
 # %%
 # Get artist information
 # Here we use client credential authorizations for better rate limiting

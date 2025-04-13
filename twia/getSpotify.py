@@ -87,7 +87,7 @@ def cleanDates(date):
     date = re.sub('\d+(st|nd|rd|th)', lambda m: m.group()[:-2].zfill(2), date)
     return datetime.strptime(date, '%A, %B %d %Y')
 
-def scrapeAndClassifyArtists(url = 'https://austin.showlists.net', maxDays = 7):
+def scrapeAndClassifyAustin(url = 'https://austin.showlists.net', maxDays = 7):
     """
     Scrape a given url and find artists within a given time period
     Inputs:
