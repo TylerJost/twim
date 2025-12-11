@@ -23,7 +23,7 @@ def isEvent(entry):
     return not isVenue(entry)
 
 def isDate(entry):
-    days = ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun')
+    days = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
     return entry.split(',')[0] in days
 
 def getBostonSoup(url='https://bostonshows.org/'):
@@ -75,7 +75,7 @@ def predArtists(soup, potentialBan, token_classifier, maxDays=7):
     webCommand = '.date-header , .event-details div:nth-child(2) , #events div:nth-child(1)'
     webFo = soup.select(webCommand)
     entries = [entry.text.replace('\n', '') for entry in webFo]
-    firstDate = datetime.strptime(entries[0], "%a, %B %d")
+    firstDate = datetime.strptime(entries[0], "%A, %B %d")
     firstDate = firstDate.replace(day=datetime.now().day)
 
     predArtists = []
@@ -83,7 +83,7 @@ def predArtists(soup, potentialBan, token_classifier, maxDays=7):
     for entry in tqdm(entries):
         # Check date
         if isDate(entry):
-            date = datetime.strptime(entry, "%a, %B %d")
+            date = datetime.strptime(entry, "%A, %B %d")
             delta = date - firstDate
 
             # If it's before the current date, continually skip
