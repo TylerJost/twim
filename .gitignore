@@ -32,3 +32,6 @@ __pycache__/
 twia.egg-info
 config.cfg
 .spotipyoauthcache
+# pixi environments
+.pixi
+*.egg-info
