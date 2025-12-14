@@ -111,7 +111,8 @@ sp = authSpotify()
 # %%
 playlistId = 'spotify:playlist:1dMrLRiRtzAq1Ad9Mx6A95'
 # %%
-results = sp.user_playlist_add_items('tjost', playlistId, allUris)
+# results = sp.user_playlist_add_items('tjost', playlistId, allUris)
+results = sp.playlist_add_items(playlistId, allUris)
 # %%
 response = sp.playlist_items(playlistId,
                                 offset=0,
