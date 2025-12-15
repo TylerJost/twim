@@ -1,24 +1,30 @@
-# TWiA
-*T*his *W*eek *i*n *A*ustin is meant to be a repository for code to make a playlist for upcoming artists in the Austin area. 
+# TWiM
+*T*his *W*eek *i*n *N*usic is meant to be a repository for code to make a playlist for upcoming artists in the Austin and Boston areas. 
 
-TWiA is also a curated playlist of songs from artists that are playing *this week (!!!)* in Austin, TX. 
+TWiA is a curated playlist of songs from artists that are playing *this week (!!!)* in Austin, TX, and TWiB is a playlist of artists in Boston, MA. 
 
 Want to listen to the playlist? Check it out on Spotify at:
+
+TWiB:
+https://open.spotify.com/playlist/1dMrLRiRtzAq1Ad9Mx6A95?si=b3dffcc918724f28
+
+TWiA:
+
 https://open.spotify.com/playlist/7oWlCMpyEMTjvu1GwIoDMN?si=38c25252b3054237
 
 ## How are the songs chosen?
 Right now I'm taking the top 15 artists and including 3 songs per artist. The rest of the songs are 55 of the other artists' top songs at 1 song per artist. I think that 100 songs is already getting a little long for a playlist but this does pose a few other issues such as:
 
-1. What to do about artists that are consistently playing? Artists that play in Austin every week need to be featured but they don't need to be in the running every week or day. There are simply too many people playing each week. I think this is a good problem! 
+1. What to do about artists that are consistently playing? Artists that play every week need to be featured but they don't need to be in the running every week or day. There are simply too many people playing each week. I think this is a good problem! 
 
 2. Should there be more than 100 songs?
 
-3. Should it be more than just this week in Austin? Why not this month or just a daily playlist. 
+3. Should it be more than just this week? Why not this month or just a daily playlist? 
 
 Most of these problems are mainly up to your personal preference which is why *some* of the code is available. 
 
 ## How do you find the artists?
-I scrape local with mostly plain-text interfaces to gather artists and the dates they are playing. This presents one big issue, which is how to deal with inconsistent ways of representing artists. For example, if a venue lists something such as:
+I scrape websites with mostly plain-text interfaces to gather artists and the dates they are playing. This presents one big issue, which is how to deal with inconsistent ways of representing artists. For example, if a venue lists something such as:
 
  > Australian punk night presents: THE CHATS / COSMIC PSYCHOS / THE SCHIZOPHONICS
 
