@@ -1,5 +1,5 @@
 # TWiM
-*T*his *W*eek *i*n *N*usic is meant to be a repository for code to make a playlist for upcoming artists in the Austin and Boston areas. 
+*T*his *W*eek *i*n *M*usic is meant to be a repository for code to make a playlist for upcoming artists in the Austin and Boston areas. 
 
 TWiA is a curated playlist of songs from artists that are playing *this week (!!!)* in Austin, TX, and TWiB is a playlist of artists in Boston, MA. 
 
