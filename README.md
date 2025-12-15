@@ -6,6 +6,7 @@ TWiA is a curated playlist of songs from artists that are playing *this week (!!
 Want to listen to the playlist? Check it out on Spotify at:
 
 TWiB:
+
 https://open.spotify.com/playlist/1dMrLRiRtzAq1Ad9Mx6A95?si=b3dffcc918724f28
 
 TWiA:
